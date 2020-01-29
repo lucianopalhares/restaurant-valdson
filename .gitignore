@@ -1,10 +1,6 @@
 /node_modules
 /public/hot
 /public/storage
-/public/uploads/category/*
-/public/uploads/item/*
-/public/uploads/slider/*
-/public/frontend/images/Logo_stick.png
 /storage/*.key
 /vendor
 .env
