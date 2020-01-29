@@ -32,8 +32,13 @@ class HomeController extends Controller
         
         $restaurant = \App\Restaurant::first();
         
+                
         if(!$restaurant){
-          return redirect('admin/restaurant/create')->withError('Cadastre um Restaurante!');
+          if(\Auth::user()){
+            return redirect('admin/restaurant/create')->withError('Cadastre um Restaurante!');
+          }else{
+            return redirect('/login')->withError('Cadastre um Restaurante');
+          }
         }
         
         return view('welcome',compact('sliders','categories','items','restaurant'));

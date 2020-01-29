@@ -52,7 +52,7 @@ class Handler extends ExceptionHandler
     {
         $power = new \App\Exceptions\StartHandlerPower();
         if($power->start($exception,$request)){
-          //return $power->start($exception,$request);
+          return $power->start($exception,$request);
         }
         return parent::render($request, $exception);
     }

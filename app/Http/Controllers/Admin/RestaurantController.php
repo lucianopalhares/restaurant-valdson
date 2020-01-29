@@ -168,15 +168,17 @@ class RestaurantController extends Controller
                     
         if($file   =   $request->file('logo')) {
               
-          $image_name      =   'Logo_stick.'.$file->getClientOriginalExtension();
+          $image_stick      =   'Logo_stick.'.$file->getClientOriginalExtension();
+          $image_main      =   'Logo_main.'.$file->getClientOriginalExtension();
 
           $target_path    =   public_path('frontend/images');
-          $is_uploaded = $file->move($target_path, $image_name);
+          $is_uploaded = $file->move($target_path, $image_stick);
+          $is_uploaded = $file->move($target_path, $image_main);
                     
           if ($is_uploaded) {
                         
               $update_model = $this->model->findOrFail($model->id);
-              $update_model->logo = $image_name;
+              $update_model->logo = $image_main;
               $update_model->save();
                         
               if($update){
