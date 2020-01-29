@@ -41,6 +41,6 @@ class HomeController extends Controller
           }
         }
         
-        return view('welcome',compact('sliders','categories','items','restaurant'));
+        //return view('welcome',compact('sliders','categories','items','restaurant'));
     }
 }
