@@ -12,7 +12,7 @@ use App\Exceptions\HandlersPowers\FatalThrowableErrorHandler;
 use App\Exceptions\HandlersPowers\RelationNotFoundExceptionHandler;
 use App\Exceptions\HandlersPowers\ExceptionExceptionHandler;
 use App\Exceptions\HandlersPowers\DefaultExceptionHandler;
-
+use App\Exceptions\HandlersPowers\FileExceptionHandler;
 
 use App\Exceptions\HandlersPowers\HandlerPowerDoIt;
 
@@ -39,9 +39,10 @@ class StartHandlerPower extends HandlerPowerDoIt
     parent::setExceptionType(new MethodNotAllowedHttpExceptionHandler());
     parent::setExceptionType(new ViewExceptionHandler());
     parent::setExceptionType(new FatalThrowableErrorHandler());
-    parent::setExceptionType(new RelationNotFoundExceptionHandler());    
-    parent::setExceptionType(new ExceptionExceptionHandler());
+    parent::setExceptionType(new RelationNotFoundExceptionHandler());
+    parent::setExceptionType(new FileExceptionHandler()); 
+    //classes already declared - end    
+    parent::setExceptionType(new ExceptionExceptionHandler());   
     parent::setExceptionType(new DefaultExceptionHandler(),true);//true = the default class error
-    //classes already declared - end
   }
 }

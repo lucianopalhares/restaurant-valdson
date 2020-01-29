@@ -167,10 +167,10 @@ class RestaurantController extends Controller
         }              
                     
         if($file   =   $request->file('logo')) {
-              
+                              
           $image_stick      =   'Logo_stick.'.$file->getClientOriginalExtension();
           $image_main      =   'Logo_main.'.$file->getClientOriginalExtension();
-
+             
           $target_path    =   public_path('frontend/images');
           $is_uploaded = $file->move($target_path, $image_stick);
           $is_uploaded = $file->move($target_path, $image_main);
