@@ -16,7 +16,7 @@ cache:
 
 before_script:
   - cp .env.travis .env
-  - sudo mysql -e 'CREATE DATABASE restaurant-valdson;'
+  - sudo mysql -e 'CREATE DATABASE restaurant_valdson;'
   - composer self-update
   - composer install --no-interaction
   - php artisan migrate --no-interaction -vvv
