@@ -11,5 +11,4 @@
 |
 */
 
-Route::redirect('lara-admin','login');
 Route::get('/','HomeController@index')->name('welcome');
