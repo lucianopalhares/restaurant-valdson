@@ -35,9 +35,9 @@ class HomeController extends Controller
                 
         if(!$restaurant){
           if(\Auth::user()){
-            return redirect('admin/restaurant/create')->withError('Cadastre um Restaurante!');
+            //return redirect('admin/restaurant/create')->withError('Cadastre um Restaurante!');
           }else{
-            return redirect('/login')->withError('Cadastre um Restaurante');
+            //return redirect('/login')->withError('Cadastre um Restaurante');
           }
         }
         
