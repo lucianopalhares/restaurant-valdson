@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
      * @return void
      */
     public function run()
-    {
+    {/*
         // $this->call(UsersTableSeeder::class);
         $user = new User();
         $user->name = 'Admin';
@@ -29,6 +29,6 @@ class DatabaseSeeder extends Seeder
         $roleUser = new RoleUser();
         $roleUser->user_id = $user->id;
         $roleUser->role_id = $role->id;
-        $roleUser->save();
+        $roleUser->save();*/
     }
 }
