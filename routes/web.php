@@ -11,4 +11,4 @@
 |
 */
 
-Route::get('/','HomeController@index')->name('welcome');
+Route::get('/','HomeController@index');
