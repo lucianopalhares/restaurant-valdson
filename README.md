@@ -1,4 +1,4 @@
-<p align="center"><img src="https://github.com/lucianopalhares/restaurant-valdson/blob/master/public/frontend/images/logo_git.jpg" width="400"></p>
+<p align="center"><img src="https://github.com/lucianopalhares/restaurant-valdson/blob/master/public/frontend/images/logo_github.png" width="400"></p>
 
 <p align="center">
 <a href="https://travis-ci.com/lucianopalhares/restaurant-valdson"><img src="https://travis-ci.com/lucianopalhares/restaurant-valdson.svg?branch=master" alt="Build Status"></a>
