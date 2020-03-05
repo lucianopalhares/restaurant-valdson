@@ -2,23 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Category;
-use App\Contact;
-use App\Item;
-use App\Reservation;
-use App\Slider;
+use App\Restaurant;
+use App\Role;
+use App\PaymentWay;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Auth;
 
 class DashboardController extends Controller
 {
     public function index()
-    {
-        $categoryCount = Category::count();
-        $itemCount = Item::count();
-        $sliderCount = Slider::count();
-        $reservations = Reservation::where('status',false)->get();
-        $contactCount = Contact::count();
-        return view('admin.dashboard',compact('categoryCount','itemCount','sliderCount','reservations','contactCount'));
+    {               
+        $restaurant = Restaurant::all();
+        $role = Role::all();
+        $paymentWay = PaymentWay::all();
+        return view('admin.dashboard',compact('restaurant','role','paymentWay'));
     }
 }

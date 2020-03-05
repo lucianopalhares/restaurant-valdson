@@ -10,4 +10,8 @@ class Category extends Model
     {
         return $this->hasMany('App\Item');
     }
+    public function restaurants()
+    {
+        return $this->belongsToMany('App\Restaurant', 'restaurant_categories', 'category_id', 'restaurant_id')->withPivot('created_at','updated_at');
+    }
 }

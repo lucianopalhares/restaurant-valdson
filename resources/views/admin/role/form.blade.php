@@ -1,4 +1,4 @@
-@extends('layouts.partial.app')
+@extends('layouts.logged.app')
 
 @section('title')
 
@@ -11,7 +11,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-12">
-                    @include('layouts.partial.msg')
+                    @include('layouts.logged.msg')
                     <div class="card">
                         <div class="card-header" data-background-color="purple">
                             <h4 class="title">
@@ -22,7 +22,7 @@
                         </div>
                         <div class="card-content">
                         
-                            <form method="POST" action="{{ route('role.store') }}" enctype="multipart/form-data">
+                            <form method="POST" action="{{ url('admin/cargo') }}" enctype="multipart/form-data">
                               @csrf
                           
                                 
@@ -46,16 +46,16 @@
                                     </div>
                                 </div>
                                   
-                                <a href="{{ route('role.index') }}" class="btn btn-danger"><i class="material-icons">reply</i> Voltar para Lista</a>
+                                <a href="{{ url('admin/cargo') }}" class="btn btn-danger"><i class="material-icons">reply</i> Voltar para Lista</a>
 
                                 @if(isset($item->id))
-                                <a href="{{url('admin/role/create')}}" class="btn btn-secondary"><i class="material-icons">reply</i> Cadastrar Novo(a)</a>
+                                <a href="{{url('admin/cargo/create')}}" class="btn btn-secondary"><i class="material-icons">reply</i> Cadastrar Novo(a)</a>
                                 @endif
                                 
                                 @if(!isset($show))
                                 <button type="submit" class="btn btn-success"><i class="material-icons">save</i> Salvar</button>
                                 @else
-                                <a href="{{url('admin/role/'.$item->id.'/edit')}}" class="btn btn-secondary">Editar</a>
+                                <a href="{{url('admin/cargo/'.$item->id.'/edit')}}" class="btn btn-secondary">Editar</a>
                                 @endif
                                 
 

@@ -1,4 +1,4 @@
-@extends('layouts.partial.app')
+@extends('layouts.logged.app')
 
 @section('title','Login')
 
@@ -11,7 +11,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-8 col-md-offset-1">
-                    @include('layouts.partial.msg')
+                    @include('layouts.logged.msg')
                     <div class="card">
                         <div class="card-header" data-background-color="purple">
                             <h4 class="title">Entrar</h4>
@@ -36,7 +36,7 @@
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-primary">Entrar</button>
-                                <a href="{{ route('welcome') }}" class="btn btn-danger">Voltar</a>
+                                <a href="{{url('/cadastro-cliente')}}" class="btn btn-xs btn-secondary">Não é Cadastrado? Cadastre-se como Cliente</a>
                             </form>
                         </div>
                     </div>

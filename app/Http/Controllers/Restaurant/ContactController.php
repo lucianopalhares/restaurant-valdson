@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Restaurant;
 
 use Illuminate\Http\Request;
 use Brian2694\Toastr\Facades\Toastr;

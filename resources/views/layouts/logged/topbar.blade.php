@@ -11,18 +11,33 @@
         </div>
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav navbar-right">
-                {{-- <li>
-                    <a href="#pablo" class="dropdown-toggle" data-toggle="dropdown">
-                        <i class="material-icons">dashboard</i>
-                        <p class="hidden-lg hidden-md">Dashboard</p>
+                @if(Request::is('restaurante*'))
+                <li>
+                    <a href="{{url('admin/dashboard')}}" class="dropdown-toggle">
+                        <i class="material-icons">dashboard</i> Painel Admin
                     </a>
                 </li>
+                @endif
+                @if(Request::is('cliente*'))
                 <li>
-                    <a href="#pablo" class="dropdown-toggle" data-toggle="dropdown">
-                        <i class="material-icons">person</i>
-                        <p class="hidden-lg hidden-md">Profile</p>
+                  @if(\App\Customer::find(\Auth::user()->id)->carts->count())
+                    <a href="{{url('cliente/carrinho')}}" class="dropdown-toggle">                      
+                  
+                      <i class="material-icons text-success">shopping_cart</i>
+                      <span class="badge badge-primary">
+                         {{\App\Customer::find(\Auth::user()->id)->carts->count()}}
+                      </span>
                     </a>
-                </li> --}}
+                  @else 
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">                      
+                      <i class="material-icons text-secondary">shopping_cart</i>
+                      <span class="badge badge-primary">
+                         0
+                      </span>
+                    </a>                  
+                  @endif
+                </li> 
+                @endif
                 <li>
                     <a href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
                         <i class="material-icons">exit_to_app</i>

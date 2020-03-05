@@ -26,16 +26,24 @@
 <body>
     <div id="app">
         <div class="wrapper">
-            @if(Request::is('admin*'))
-                @include('layouts.partial.sidebar')
+            @if(Request::is('admin*')&&\Auth::user()->hasAnyRoles('Admin'))
+                @include('layouts.logged.sidebarAdmin')
+            @endif
+            @if(Request::is('cliente*')&&\Auth::user()->hasAnyRoles('Cliente'))
+                @include('layouts.logged.sidebarCustomer')
+            @endif
+            @if(Request::is('restaurante*')&&\Auth::user()->hasAnyRoles('Admin'))
+                @include('layouts.logged.sidebarRestaurant')
             @endif
             <div class="main-panel">
-                @if(Request::is('admin*'))
-                    @include('layouts.partial.topbar')
+                @if(Request::is('admin*')||Request::is('restaurante*')||Request::is('cliente*'))
+                    @include('layouts.logged.topbar')
                 @endif
+                
                     @yield('content')
-                @if(Request::is('admin*'))
-                    @include('layouts.partial.footer')
+                    
+                @if(Request::is('admin*')||Request::is('restaurante*'))
+                    @include('layouts.logged.footer')
                 @endif
             </div>
         </div>

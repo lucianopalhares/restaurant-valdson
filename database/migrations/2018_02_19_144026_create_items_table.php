@@ -14,16 +14,19 @@ class CreateItemsTable extends Migration
     public function up()
     {
         Schema::create('items', function (Blueprint $table) {
-            $table->increments('id');
-            $table->integer('category_id')->unsigned();
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('restaurant_id');
+            $table->foreign('restaurant_id')->references('id')->on('restaurants');
+            $table->unsignedBigInteger('category_id');
+            $table->foreign('category_id')->references('id')->on('categories'); 
             $table->string('name');
             $table->enum('type',['Unidade','Lata','Porção']);
             $table->text('description');
             $table->decimal('price', 12,2);
             $table->string('image');
-            $table->foreign('category_id')
-                ->references('id')->on('categories')
-                ->onDelete('cascade');
+            $table->string('image_path');
+            $table->unsignedBigInteger('promotion_id')->nullable();
+            $table->foreign('promotion_id')->references('id')->on('promotions'); 
             $table->timestamps();
         });
     }

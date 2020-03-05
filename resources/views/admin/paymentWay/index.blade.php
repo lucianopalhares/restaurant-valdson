@@ -1,4 +1,4 @@
-@extends('layouts.partial.app')
+@extends('layouts.logged.app')
 
 @section('title','Items')
 
@@ -11,8 +11,8 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-12">
-                    <a href="{{ route('paymentWay.create') }}" class="btn btn-primary">Cadastrar</a>
-                    @include('layouts.partial.msg')
+                    <a href="{{ url('admin/formaPagamento/create') }}" class="btn btn-primary">Cadastrar</a>
+                    @include('layouts.logged.msg')
                     <div class="card">
                         <div class="card-header" data-background-color="purple">
                             <h4 class="title">Todas Formas de Pagamento</h4>
@@ -34,9 +34,9 @@
                                             <td>{{date('H:m d/m/Y', strtotime($item->created_at))}}</td>
                                             <td>{{date('H:m d/m/Y', strtotime($item->updated_at))}}</td>
                                             <td>
-                                                <a href="{{ route('paymentWay.edit',$item->id) }}" class="btn btn-info btn-sm"><i class="material-icons">mode_edit</i></a>
+                                                <a href="{{ url('admin/formaPagamento/'.$item->id.'/edit') }}" class="btn btn-info btn-sm"><i class="material-icons">mode_edit</i></a>
 
-                                                <form id="delete-form-{{ $item->id }}" action="{{ route('paymentWay.destroy',$item->id) }}" style="display: none;" method="POST">
+                                                <form id="delete-form-{{ $item->id }}" action="{{ url('admin/formaPagamento/'.$item->id)}}" style="display: none;" method="POST">
                                                     @csrf
                                                     @method('DELETE')
                                                 </form>

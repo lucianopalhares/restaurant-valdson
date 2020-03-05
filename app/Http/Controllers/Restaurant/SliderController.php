@@ -1,20 +1,18 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Restaurant;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 
-class ItemController extends Controller
+class SliderController extends Controller
 {
     protected $model;
-    protected $category;
     
-    public function __construct(\App\Item $model){
+    public function __construct(\App\Slider $model){
       $this->model = $model;
-      $this->category = \App::make('App\Category');
     }
     /**
      * Display a listing of the resource.
@@ -24,8 +22,7 @@ class ItemController extends Controller
     public function index()
     {
         $items = $this->model::all();
-        return view('admin.item.index',compact('items'));
-
+        return view('admin.slider.index',compact('items'));
     }
 
     /**
@@ -35,8 +32,7 @@ class ItemController extends Controller
      */
     public function create()
     {
-        $categories = $this->category::all();
-        return view('admin.item.form',compact('categories'));
+        return view('admin.slider.form');
     }
 
     /**
@@ -45,6 +41,7 @@ class ItemController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
+
     public function store(Request $request)
     {   
         $update = false;
@@ -56,23 +53,17 @@ class ItemController extends Controller
         if($update){
           
           $rules = [
-              'category_id' => 'required',
-              'name' => 'required',
-              'description' => 'required',
-              'type' => 'required',
-              'price' => 'required|regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
-              'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:1500',
+            'title' => 'required',
+            'sub_title' => 'required',
+            'image' => 'mimes:jpeg,jpg,bmp,png',
           ];            
           
         }else{
           
           $rules = [
-              'category_id' => 'required',
-              'name' => 'required',
-              'description' => 'required',
-              'type' => 'required',
-              'price' => 'required|regex:/^[0-9]+(\.[0-9][0-9]?)?$/',
-              'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:1500',
+            'title' => 'required',
+            'sub_title' => 'required',
+            'image' => 'required|mimes:jpeg,jpg,bmp,png',
           ];          
         }
 
@@ -81,26 +72,23 @@ class ItemController extends Controller
         if($update){
 
           $model = $this->model->findOrFail($request->id);
-          $image_before_update = $model->imagem;
+          $image_before_update = $model->image;
                 
         }else{
           $model = new $this->model;
         }
 
-        $model->category_id = $request->category_id;
-        $model->name = $request->name;
-        $model->type = $request->type;
-        $model->description = $request->description;
-        $model->price = $request->price;
+        $model->title = $request->title;
+        $model->sub_title = $request->sub_title;
                 
         if(strlen($request->image)>0){
           
           $model->image = $request->image;
            
-        }        
+        }      
         $model->save();
             
-        $response = 'Cardápio ';
+        $response = 'Slider ';
             
         if($update){
           $response .= 'Atualizado(a) com Sucesso!';
@@ -112,7 +100,7 @@ class ItemController extends Controller
               
           $image_name      =   time().time().'.'.$file->getClientOriginalExtension();
 
-          $target_path    =   public_path('uploads/item');
+          $target_path    =   public_path('uploads/slider');
           $is_uploaded = $file->move($target_path, $image_name);
                     
           if ($is_uploaded) {
@@ -123,8 +111,8 @@ class ItemController extends Controller
                         
               if($update){
                 $storage = Storage::disk('public');
-                if(\File::exists('uploads/item/'.$image_before_update)) {
-                    \File::delete('uploads/item/'.$image_before_update);
+                if(\File::exists('uploads/slider/'.$image_before_update)) {
+                    \File::delete('uploads/slider/'.$image_before_update);
                 }  
               }
           } else {
@@ -136,7 +124,7 @@ class ItemController extends Controller
           if($update){
             if(strlen($image_before_update)>0){
                   
-              if(!\File::exists('uploads/item/'.$image_before_update)) {
+              if(!\File::exists('uploads/slider/'.$image_before_update)) {
                   $response .= ' (a imagem não foi salva)';
               }                  
             }else{
@@ -150,10 +138,9 @@ class ItemController extends Controller
         if (request()->wantsJson()) {
           return response()->json(['status'=>true,'msg'=>$response]);
         }else{
-          return back()->with('successMsg',$response);
+          return redirect('admin/slider')->with('successMsg',$response);
         }              
     }
-
     /**
      * Display the specified resource.
      *
@@ -174,8 +161,7 @@ class ItemController extends Controller
     public function edit($id)
     {
         $item = $this->model::findOrFail($id);
-        $categories = $this->category::all();
-        return view('admin.item.form',compact('item','categories'));
+        return view('admin.slider.form',compact('item'));
     }
 
     /**
@@ -187,6 +173,7 @@ class ItemController extends Controller
      */
     public function update(Request $request, $id)
     {
+
     }
 
     /**
@@ -195,14 +182,15 @@ class ItemController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+
     public function destroy($id)
     {
         $item = $this->model::findOrFail($id);
-        if (file_exists('uploads/item/'.$item->image))
+        if (file_exists('uploads/slider/'.$item->image))
         {
-            unlink('uploads/item/'.$item->image);
+            unlink('uploads/slider/'.$item->image);
         }
         $item->delete();
-        return back()->with('successMsg','Cardápio Deletada com Sucesso!');
+        return back()->with('successMsg','Slider Deletado com Sucesso!');
     }
 }

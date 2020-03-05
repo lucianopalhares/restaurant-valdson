@@ -1,4 +1,4 @@
-@extends('layouts.partial.app')
+@extends('layouts.logged.app')
 
 @section('title','Items')
 
@@ -11,8 +11,8 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-12">
-                    <a href="{{ route('role.create') }}" class="btn btn-primary">Cadastrar</a>
-                    @include('layouts.partial.msg')
+                    <a href="{{ url('admin/cargo/create') }}" class="btn btn-primary">Cadastrar</a>
+                    @include('layouts.logged.msg')
                     <div class="card">
                         <div class="card-header" data-background-color="purple">
                             <h4 class="title">Cargos</h4>
@@ -34,9 +34,10 @@
                                             <td>{{date('H:m d/m/Y', strtotime($item->created_at))}}</td>
                                             <td>{{date('H:m d/m/Y', strtotime($item->updated_at))}}</td>
                                             <td>
-                                                <a href="{{ route('role.edit',$item->id) }}" class="btn btn-info btn-sm"><i class="material-icons">mode_edit</i></a>
+                                              @if($item->slug!='admin'&&$item->slug!='cliente')
+                                                <a href="{{ url('admin/cargo/'.$item->id.'/edit') }}" class="btn btn-info btn-sm"><i class="material-icons">mode_edit</i></a>
 
-                                                <form id="delete-form-{{ $item->id }}" action="{{ route('role.destroy',$item->id) }}" style="display: none;" method="POST">
+                                                <form id="delete-form-{{ $item->id }}" action="{{ url('admin/cargo/'.$item->id)}}" style="display: none;" method="POST">
                                                     @csrf
                                                     @method('DELETE')
                                                 </form>
@@ -46,6 +47,7 @@
                                                 }else {
                                                     event.preventDefault();
                                                         }"><i class="material-icons">delete</i></button>
+                                              @endif
                                             </td>
                                         </tr>
                                     @endforeach

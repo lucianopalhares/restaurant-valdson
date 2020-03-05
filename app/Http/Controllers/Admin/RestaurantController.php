@@ -7,13 +7,21 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection;
+use App\Restaurant;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
+use Exception;
+use Illuminate\Validation\Rule;
 
 class RestaurantController extends Controller
 {
     protected $model;
+    protected $payment_way;
     
     public function __construct(\App\Restaurant $model){
       $this->model = $model;
+      $this->payment_way = \App::make('App\PaymentWay');
     }
     /**
      * Display a listing of the resource.
@@ -22,7 +30,10 @@ class RestaurantController extends Controller
      */
     public function index()
     {
-        $items = $this->model::all();
+        if (request()->wantsJson() or str_contains(url()->current(), 'api/')) {
+            return response()->json(['data'=>$this->model::all()]);
+        } 
+        $items = $this->model::paginate(10);
         return view('admin.restaurant.index',compact('items'));
 
     }
@@ -32,42 +43,10 @@ class RestaurantController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function states()
-    {        
-        $ufs_array = array();
-        $ufs_array[] = array('code' => 'AC','name' => 'Acre');
-        $ufs_array[] = array('code' => 'AL','name' => 'Alagoas');
-        $ufs_array[] = array('code' => 'AP','name' => 'Amapá');
-        $ufs_array[] = array('code' => 'AM','name' => 'Amazonas');
-        $ufs_array[] = array('code' => 'BA','name' => 'Bahia');
-        $ufs_array[] = array('code' => 'CE','name' => 'Ceara');
-        $ufs_array[] = array('code' => 'DF','name' => 'Distrito Federal');
-        $ufs_array[] = array('code' => 'ES','name' => 'Espirito Santo');
-        $ufs_array[] = array('code' => 'GO','name' => 'Goiás');
-        $ufs_array[] = array('code' => 'MA','name' => 'Maranhão');
-        $ufs_array[] = array('code' => 'MT','name' => 'Mato Grosso');
-        $ufs_array[] = array('code' => 'MS','name' => 'Mato Grosso do Sul');
-        $ufs_array[] = array('code' => 'MG','name' => 'Minas Gerais');
-        $ufs_array[] = array('code' => 'PA','name' => 'Pará');
-        $ufs_array[] = array('code' => 'PB','name' => 'Paraíba');
-        $ufs_array[] = array('code' => 'PR','name' => 'Paraná');
-        $ufs_array[] = array('code' => 'PE','name' => 'Pernambuco');
-        $ufs_array[] = array('code' => 'PI','name' => 'Piauí');
-        $ufs_array[] = array('code' => 'RJ','name' => 'Rio de Janeiro');
-        $ufs_array[] = array('code' => 'RN','name' => 'Rio Grande do Norte');
-        $ufs_array[] = array('code' => 'RS','name' => 'Rio Grande do Sul');
-        $ufs_array[] = array('code' => 'RO','name' => 'Rondônia');
-        $ufs_array[] = array('code' => 'RR','name' => 'Roraima');
-        $ufs_array[] = array('code' => 'SC','name' => 'Santa Catarina');
-        $ufs_array[] = array('code' => 'SP','name' => 'São Paulo');
-        $ufs_array[] = array('code' => 'SE','name' => 'Sergipe');
-        $ufs_array[] = array('code' => 'TO','name' => 'Tocantins');
-        return collect($ufs_array);
-    }
     public function create()
     {  
-        $ufs = $this->states();
-        return view('admin.restaurant.form',compact('ufs'));
+        $payment_ways = $this->payment_way::all();
+        return view('admin.restaurant.form',compact('payment_ways'));
     }
 
     /**
@@ -77,15 +56,13 @@ class RestaurantController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {   
-        $update = false;
-                                
-        if(isset($request->id)){
-          $update = true;
-        }
-        
-        if($update){
+    {
+        $is_api = false;
+        if (request()->wantsJson() or str_contains(url()->current(), 'api/')) {
           
+            $is_api = true;
+        }    
+                            
           $rules = [
               'name' => 'required',
               'address' => 'required',
@@ -102,41 +79,31 @@ class RestaurantController extends Controller
               'cnpj' => 'required',
               'insc_est' => 'required',
               'about_us' => 'nullable'
-          ];            
+          ]; 
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {      
           
-        }else{
-          
-          $rules = [
-              'name' => 'required',
-              'address' => 'required',
-              'number' => 'nullable',
-              'district' => 'required',
-              'state' => 'required',
-              'city' => 'required',
-              'opening_hours_start' => 'required',
-              'opening_hours_end' => 'required',
-              'phone' => 'nullable',
-              'mobile' => 'required',
-              'whatsapp' => 'nullable',
-              'logo' => 'required|image|mimes:png|max:1500',
-              'cnpj' => 'required',
-              'insc_est' => 'required',
-              'about_us' => 'nullable'
-          ];          
-        }
-
-        $this->validate($request, $rules);   
-
-        if($update){
-
-          $model = $this->model->findOrFail($request->id);
-          $image_before_update = $model->logo;
-                
-        }else{
-          $model = new $this->model;
+            if ($is_api) {
+              return response()->json(['status'=>false,'msg'=>$validator->errors()]);
+            }else{              
+              return redirect()->back()
+                        ->withErrors($validator->errors())
+                        ->withInput();
+            }     
+        } 
+        
+        try {
+            $model = new $this->model;
+                        
+        $slug = str_slug($request->name);
+        if($this->model::whereSlug($slug)->count()>0){
+          $slug = str_slug($request->name.time());
         }
 
         $model->name = $request->name;
+        $model->slug = $slug;
         $model->address = $request->address;
         $model->number = $request->number;
         $model->district = $request->district;
@@ -150,68 +117,73 @@ class RestaurantController extends Controller
         $model->cnpj = $request->cnpj;
         $model->insc_est = $request->insc_est;
         $model->about_us = $request->about_us;
+        $model->logo_path = 'public/frontend/images/restaurants';
+        $model->tax = $request->tax;
+        $model->delivery_time = $request->delivery_time;
+        $model->payment_way_id = $request->payment_way_id;
+        $model->value_min = $request->value_min;
+        $model->info = $request->info;
                 
         if(strlen($request->logo)>0){
           
           $model->logo = $request->logo;
            
-        }        
-        $model->save();
+        }  
             
-        $response = 'Restaurante ';
+        $save = $model->save();
             
-        if($update){
-          $response .= 'Atualizado(a) com Sucesso!';
-        }else{
-          $response .= 'Cadastrado(a) com Sucesso!';
-        }              
-                    
+            $response = 'Restaurante';
+            
+            $response .= ' Cadastrado(a) com Sucesso!';  
+            
         if($file   =   $request->file('logo')) {
               
-          $image_name      =   'Logo_stick.'.$file->getClientOriginalExtension();
+          $image_name      =   $slug.'-logo.'.$file->getClientOriginalExtension();
 
-          $target_path    =   public_path('frontend/images');
+          $target_path    =   public_path('frontend/images/restaurants');
           $is_uploaded = $file->move($target_path, $image_name);
                     
           if ($is_uploaded) {
-                        
+                                    
               $update_model = $this->model->findOrFail($model->id);
               $update_model->logo = $image_name;
-              $update_model->save();
-                        
-              if($update){
-                $storage = Storage::disk('public');
-                if(\File::exists('frontend/images/'.$image_before_update)) {
-                    \File::delete('frontend/images/'.$image_before_update);
-                }  
-              }
+              $update_model->save();                        
+            
           } else {
               $response .= ' (o logo não foi salvo)';
-          }
-            
+          }            
 
         }else{
-          if($update){
-            if(strlen($image_before_update)>0){
-                  
-              if(!\File::exists('frontend/images/'.$image_before_update)) {
-                  $response .= ' (o logo não foi salvo)';
-              }                  
+          $response .= ' (o logo não foi salvo)';
+        }   
+            
+            if ($is_api) {
+              return response()->json(['status'=>true,'msg'=>$response]);
             }else{
-              $response .= ' (o logo não foi salvo)';
-            }
-          }else{
-            $response .= ' (o logo não foi salvo)';
-          }
-        }    
+              return back()->with('successMsg', $response);
+            }            
             
-        if (request()->wantsJson()) {
-          return response()->json(['status'=>true,'msg'=>$response]);
-        }else{
-          return redirect('admin/restaurant/'.$model->id)->with('successMsg',$response);
-        }              
+        } catch (\Exception $e) {//errors exceptions
+          
+            $response = null;
+            
+            switch (get_class($e)) {
+              case QueryException::class:$response = $e->getMessage();
+              case Exception::class:$response = $e->getMessage();
+              case ValidationException::class:$response = $e;
+              default: $response = get_class($e);
+            }  
+            
+            $response = method_exists($e,'getMessage')?$e->getMessage():get_class($e);             
+            
+            if ($is_api) {
+              return response()->json(['status'=>false,'msg'=>$response]);
+            }else{
+              return back()->withInput($request->toArray())->withErrors($response);
+            }  
+          
+        } 
     }
-
     /**
      * Display the specified resource.
      *
@@ -220,10 +192,43 @@ class RestaurantController extends Controller
      */
     public function show($id)
     {
-        $item = $this->model::findOrFail($id);
-        $ufs = $this->states();
-        $show = true;
-        return view('admin.restaurant.form',compact('item','ufs','show'));
+        $is_api = false;
+        if (request()->wantsJson() or str_contains(url()->current(), 'api/')) {
+            $is_api = true;
+        } 
+            
+        try {
+    
+            $item = $this->model::findOrFail($id);
+            $payment_ways = $this->payment_way::all();
+            
+                        
+            if ($is_api) {
+              return response()->json(['data'=>$item]);
+            }
+            $show = true;
+            return view('admin.restaurant.form',compact('item','payment_ways','show'));                     
+            
+        } catch (\Exception $e) {//errors exceptions
+          
+            $response = null;
+            
+            switch (get_class($e)) {
+              case QueryException::class:$response = $e->getMessage();
+              case Exception::class:$response = $e->getMessage();
+              case ValidationException::class:$response = $e;
+              default: $response = get_class($e);
+            }    
+            
+            $response = method_exists($e,'getMessage')?$e->getMessage():get_class($e);           
+            
+            if ($is_api) {
+              return response()->json(['status'=>false,'msg'=>$response]);
+            }else{
+              return back()->withErrors($response);
+            }  
+          
+        }  
     }
 
     /**
@@ -234,9 +239,44 @@ class RestaurantController extends Controller
      */
     public function edit($id)
     {
-        $item = $this->model::findOrFail($id);
-        $ufs = $this->states();
-        return view('admin.restaurant.form',compact('item','ufs'));
+        $is_api = false;
+        if (request()->wantsJson() or str_contains(url()->current(), 'api/')) {
+            $is_api = true;
+        } 
+            
+        try {
+    
+            $item = $this->model::findOrFail($id);
+            $payment_ways = $this->payment_way::all();
+            
+                        
+            if ($is_api) {
+              return response()->json(['data'=>$item]);
+            }
+            
+            return view('admin.restaurant.form',compact('item','payment_ways'));                     
+            
+        } catch (\Exception $e) {//errors exceptions
+          
+            $response = null;
+            
+            switch (get_class($e)) {
+              case QueryException::class:$response = $e->getMessage();
+              case Exception::class:$response = $e->getMessage();
+              case ValidationException::class:$response = $e;
+              default: $response = get_class($e);
+            }    
+            
+            $response = method_exists($e,'getMessage')?$e->getMessage():get_class($e);           
+            
+            if ($is_api) {
+              return response()->json(['status'=>false,'msg'=>$response]);
+            }else{
+              return back()->withErrors($response);
+            }  
+          
+        }     
+
     }
 
     /**
@@ -246,8 +286,151 @@ class RestaurantController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Restaurant $restaurante)
     {
+        $is_api = false;
+        if (request()->wantsJson() or str_contains(url()->current(), 'api/')) {
+          
+            $is_api = true;
+        }    
+                            
+          $rules = [
+              'name' => 'required',
+              'address' => 'required',
+              'number' => 'nullable',
+              'district' => 'required',
+              'state' => 'required',
+              'city' => 'required',
+              'opening_hours_start' => 'required',
+              'opening_hours_end' => 'required',
+              'phone' => 'nullable',
+              'mobile' => 'required',
+              'whatsapp' => 'nullable',
+              'logo' => 'image|mimes:png|max:1500',
+              'cnpj' => 'required',
+              'insc_est' => 'required',
+              'about_us' => 'nullable'
+          ]; 
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {      
+          
+            if ($is_api) {
+              return response()->json(['status'=>false,'msg'=>$validator->errors()]);
+            }else{              
+              return redirect()->back()
+                        ->withErrors($validator->errors())
+                        ->withInput();
+            }     
+        } 
+        
+        try {
+            $model = $restaurante;
+            
+            $image_before_update = $restaurante->logo;
+                        
+        $slug = str_slug($request->name);
+        if($this->model::whereSlug($slug)->count()>0){
+          $slug = str_slug($request->name.time());
+        }
+
+        $model->name = $request->name;
+        $model->slug = $slug;
+        $model->address = $request->address;
+        $model->number = $request->number;
+        $model->district = $request->district;
+        $model->state = $request->state;
+        $model->city = $request->city;
+        $model->opening_hours_start = $request->opening_hours_start;
+        $model->opening_hours_end = $request->opening_hours_end;
+        $model->phone = $request->phone;
+        $model->mobile = $request->mobile;
+        $model->whatsapp = $request->whatsapp;
+        $model->cnpj = $request->cnpj;
+        $model->insc_est = $request->insc_est;
+        $model->about_us = $request->about_us;
+        $model->logo_path = 'public/frontend/images/restaurants';
+        $model->tax = $request->tax;
+        $model->delivery_time = $request->delivery_time;
+        $model->payment_way_id = $request->payment_way_id;
+        $model->value_min = $request->value_min;
+        $model->info = $request->info;
+                
+        if(strlen($request->logo)>0){
+          
+          $model->logo = $request->logo;
+           
+        }  
+            
+        $save = $model->save();
+            
+            $response = 'Restaurante';
+            
+            $response .= ' Cadastrado(a) com Sucesso!';  
+            
+        if($file   =   $request->file('logo')) {
+              
+          $image_name      =   $slug.'-logo.'.$file->getClientOriginalExtension();
+
+          $target_path    =   public_path('frontend/images/restaurants');
+          $is_uploaded = $file->move($target_path, $image_name);
+                    
+          if ($is_uploaded) {
+            
+              $update_model = $this->model->findOrFail($model->id);
+              $update_model->logo = $image_name;
+              $update_model->save();
+                        
+                $storage = Storage::disk('public');
+                if(\File::exists('frontend/images/restaurants/'.$image_before_update)) {
+                    \File::delete('frontend/images/restaurants/'.$image_before_update);
+                }  
+              
+          } else {
+              $response .= ' (o logo não foi salvo)';
+          }
+            
+
+        }else{
+      
+            if(strlen($image_before_update)>0){
+                  
+              if(!\File::exists('frontend/images/restaurants/'.$image_before_update)) {
+                  $response .= ' (o logo não foi salvo)';
+              }                  
+            }else{
+              $response .= ' (o logo não foi salvo)';
+            }
+    
+        }    
+            
+            if ($is_api) {
+              return response()->json(['status'=>true,'msg'=>$response]);
+            }else{
+              return back()->with('successMsg', $response);
+            }            
+            
+        } catch (\Exception $e) {//errors exceptions
+          
+            $response = null;
+            
+            switch (get_class($e)) {
+              case QueryException::class:$response = $e->getMessage();
+              case Exception::class:$response = $e->getMessage();
+              case ValidationException::class:$response = $e;
+              default: $response = get_class($e);
+            }  
+            
+            $response = method_exists($e,'getMessage')?$e->getMessage():get_class($e);             
+            
+            if ($is_api) {
+              return response()->json(['status'=>false,'msg'=>$response]);
+            }else{
+              return back()->withInput($request->toArray())->withErrors($response);
+            }  
+          
+        } 
     }
 
     /**
@@ -258,12 +441,45 @@ class RestaurantController extends Controller
      */
     public function destroy($id)
     {
-        $item = $this->model::findOrFail($id);
-        if (file_exists('frontend/images/'.$item->logo))
-        {
-            unlink('frontend/images/'.$item->logo);
-        }
-        $item->delete();
-        return back()->with('successMsg','Restaurante Deletado com Sucesso!');
+        $is_api = false;
+        if (request()->wantsJson() or str_contains(url()->current(), 'api/')) {
+            $is_api = true;
+        } 
+            
+        try {
+    
+            $item = $this->model::findOrFail($id);
+            if (file_exists('frontend/images/restaurants/'.$item->logo))
+            {
+                unlink('frontend/images/restaurants/'.$item->logo);
+            }
+            $item->delete(); 
+                        
+            if ($is_api) {
+              return response()->json(['status'=>true,'msg'=>'Restaurante Deletado com Sucesso!']);
+            }
+            
+            return back()->with('successMsg','Restaurante Deletado com Sucesso!');                    
+            
+        } catch (\Exception $e) {//errors exceptions
+          
+            $response = null;
+            
+            switch (get_class($e)) {
+              case QueryException::class:$response = $e->getMessage();
+              case Exception::class:$response = $e->getMessage();
+              case ValidationException::class:$response = $e;
+              default: $response = get_class($e);
+            }    
+            
+            $response = method_exists($e,'getMessage')?$e->getMessage():get_class($e);           
+            
+            if ($is_api) {
+              return response()->json(['status'=>false,'msg'=>$response]);
+            }else{
+              return back()->withErrors($response);
+            }  
+          
+        }   
     }
 }

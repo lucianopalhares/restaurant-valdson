@@ -4,7 +4,9 @@
             &copy;
             <script>
                 document.write(new Date().getFullYear())
+              
             </script>
+            
             <strong> Developed <i class="far fa-heart"></i> by </strong>
                         RVSYSTEM
         </p>

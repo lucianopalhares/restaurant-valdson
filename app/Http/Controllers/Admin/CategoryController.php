@@ -22,7 +22,10 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $items = $this->model::all();
+        if (request()->wantsJson() or str_contains(url()->current(), 'api/')) {
+          return response()->json(['data'=>$this->model::all()]);
+        }
+        $items = $this->model::paginate(10);
         return view('admin.category.index',compact('items'));
     }
 
@@ -54,14 +57,14 @@ class CategoryController extends Controller
         if($update){
           
           $rules = [
-              'name' =>  ['required','max:100',Rule::unique('categories')->ignore($request->id)],
+              'name' =>  'required',
               'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:1500',
           ];            
           
         }else{
           
           $rules = [
-              'name' =>  'required|unique:categories|max:100',
+              'name' =>  'required',
               'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:1500',
           ];          
         }
@@ -81,6 +84,7 @@ class CategoryController extends Controller
         $model->name = $request->name;
         $model->slug = $slug;             
         $model->description = $request->description;
+        $model->image_path = 'public/uploads/category';
         
         if(strlen($request->image)>0){
           if($update){
@@ -105,6 +109,8 @@ class CategoryController extends Controller
           $is_uploaded = $file->move($target_path, $image_name);
                     
           if ($is_uploaded) {
+            
+            //$response .= ' (imagem salva em public/uploads/category/'.$image_name.')';
                         
               $update_model = $this->model->findOrFail($model->id);
               $update_model->image = $image_name;
@@ -148,9 +154,15 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($id)//restaurantes desta categoria
     {
-        //
+        try {
+          $item = $this->model::findOrFail($id);
+        } catch (\Exception $e) {
+          return back()->withError('Categoria não encontrada');
+        }
+                
+        return view('admin.category.restaurants',compact('item'));
     }
 
     /**
@@ -161,7 +173,7 @@ class CategoryController extends Controller
      */
     public function edit($id)
     {
-        $item = $this->model::find($id);
+        $item = $this->model::findOrFail($id);
         return view('admin.category.form',compact('item'));
     }
 
@@ -209,10 +221,12 @@ class CategoryController extends Controller
      */
     public function destroy($id)
     {
-        $item = $this->model::find($id);
-        if (file_exists('uploads/category/'.$item->image))
-        {
-            unlink('uploads/category/'.$item->image);
+        $item = $this->model::findOrFail($id);
+        if(strlen($item->image)){
+          if (file_exists('uploads/category/'.$item->image))
+          {
+              unlink('uploads/category/'.$item->image);
+          }
         }
         $item->delete();
         return back()->with('successMsg','Categoria Deletada com Sucesso!');

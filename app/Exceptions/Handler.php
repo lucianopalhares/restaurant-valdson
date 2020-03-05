@@ -50,10 +50,10 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
-        $power = new \App\Exceptions\StartHandlerPower();
-        if($power->start($exception,$request)){
+        //$power = new \App\Exceptions\StartHandlerPower();
+        //if($power->start($exception,$request)){
           //return $power->start($exception,$request);
-        }
+        //}
         return parent::render($request, $exception);
     }
 }
